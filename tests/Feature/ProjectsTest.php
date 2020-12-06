@@ -2,12 +2,10 @@
 
 namespace Tests\Feature;
 
-use Attribute;
 use Tests\TestCase;
-use phpDocumentor\Reflection\Types\This;
+use App\Models\Project;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use League\CommonMark\Extension\Attributes\Node\Attributes;
 
 class ProjectsTest extends TestCase
 {
@@ -20,15 +18,32 @@ class ProjectsTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
-        $attributes = [
-            'title' => $this->faker->sentence,
-            'description' => $this->faker->paragraph
-        ];
+        $attributes = Project::factory()->raw();
 
         $this->post('/projects', $attributes)->assertRedirect('/projects');
 
         $this->assertDatabaseHas('projects', $attributes);
 
         $this->get('/projects')->assertSee($attributes['title']);
+    }
+
+    /**
+     * @test
+     */
+    public function a_project_requires_a_title()
+    {
+        $attributes = Project::factory()->raw(['title' => '']);
+
+        $this->post('/projects', $attributes)->assertSessionHasErrors('title');
+    }
+
+    /**
+     * @test
+     */
+    public function a_project_requires_a_description()
+    {
+        $attributes = Project::factory()->raw(['description' => '']);
+
+        $this->post('/projects', $attributes)->assertSessionHasErrors('description');
     }
 }
